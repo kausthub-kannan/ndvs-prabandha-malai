@@ -84,7 +84,7 @@ export default function SearchScreen() {
   }, []);
 
   const handlePasuramPress = useCallback((id: number) => {
-    router.push({ pathname: '/(tabs)/pasuram', params: { id: String(id) } });
+    router.push({ pathname: '/pasuram', params: { id: String(id) } });
   }, [router]);
 
   const activeFilterCount = Object.values(selectedTags).reduce((acc, curr) => acc + curr.length, 0);

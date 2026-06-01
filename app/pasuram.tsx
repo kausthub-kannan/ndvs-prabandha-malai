@@ -1,4 +1,5 @@
 import { getAdjacentPasuramIds, getPasuramById, toggleBookmark } from '@/database/prabhandham';
+import { PasuramDetail, AdjacentPasuramIds } from '@/database/utils/db';
 import { useLanguage } from '@/context/language-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -13,22 +14,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-type PasuramDetail = {
-  id: number;
-  si_no: string;
-  prabhandham: string;
-  tamil_scripts: string;
-  english_scripts: string;
-  meaning: string;
-  purport: string;
-  azhwar: string;
-  bookmark: number;
-  archavathara?: string | null;
-  avataram?: string | null;
-  rasa?: string | null;
-};
-
-type Adjacent = { prevId: number | null; nextId: number | null };
+type Adjacent = AdjacentPasuramIds;
 
 // Glowing heart — scale spring + fade glow layer
 function GlowHeart({ bookmarked, onToggle }: { bookmarked: boolean; onToggle: () => void }) {
@@ -122,7 +108,7 @@ export default function PasuramScreen() {
   const navigateTo = useCallback(
     (targetId: number | null) => {
       if (!targetId) return;
-      router.replace({ pathname: '/(tabs)/pasuram', params: { id: String(targetId) } });
+      router.replace({ pathname: '/pasuram', params: { id: String(targetId) } });
     },
     [router]
   );
@@ -188,28 +174,28 @@ export default function PasuramScreen() {
         ) : null}
 
         {/* Tags (Rasa, Avataram, Archavathara) */}
-          {(pasuram.rasa || pasuram.avataram || pasuram.archavathara) ? (
-            <View className="flex-row flex-wrap gap-1.5 mt-3">
-              {splitTags(pasuram.rasa).map((tag, idx) => (
-                <View key={`rasa-${idx}`} className="px-2 py-1 rounded-md items-center justify-center bg-rose-100">
-                  <Text className="text-[11px] font-bold tracking-[0.2px] text-rose-800">{tag}</Text>
-                </View>
-              ))}
-              {splitTags(pasuram.avataram).map((tag, idx) => (
-                <View key={`avataram-${idx}`} className="px-2 py-1 rounded-md items-center justify-center bg-green-100">
-                  <Text className="text-[11px] font-bold tracking-[0.2px] text-green-800">{tag}</Text>
-                </View>
-              ))}
-              {splitTags(pasuram.archavathara).map((tag, idx) => (
-                <View key={`arch-${idx}`} className="px-2 py-1 rounded-md items-center justify-center bg-blue-100">
-                  <Text className="text-[11px] font-bold tracking-[0.2px] text-blue-800">{tag}</Text>
-                </View>
-              ))}
-            </View>
-          ) : null}
+        {(pasuram.rasa || pasuram.avataram || pasuram.archavathara) ? (
+          <View className="flex-row flex-wrap gap-1.5 mt-3">
+            {splitTags(pasuram.rasa).map((tag, idx) => (
+              <View key={`rasa-${idx}`} className="px-2 py-1 rounded-md items-center justify-center bg-rose-100">
+                <Text className="text-[11px] font-bold tracking-[0.2px] text-rose-800">{tag}</Text>
+              </View>
+            ))}
+            {splitTags(pasuram.avataram).map((tag, idx) => (
+              <View key={`avataram-${idx}`} className="px-2 py-1 rounded-md items-center justify-center bg-green-100">
+                <Text className="text-[11px] font-bold tracking-[0.2px] text-green-800">{tag}</Text>
+              </View>
+            ))}
+            {splitTags(pasuram.archavathara).map((tag, idx) => (
+              <View key={`arch-${idx}`} className="px-2 py-1 rounded-md items-center justify-center bg-blue-100">
+                <Text className="text-[11px] font-bold tracking-[0.2px] text-blue-800">{tag}</Text>
+              </View>
+            ))}
+          </View>
+        ) : null}
 
-          {/* ── Thin divider ── */}
-        <View className="h-px bg-border-color mb-7" />
+        {/* ── Thin divider ── */}
+        <View className="h-px bg-border-color mt-7 mb-7" />
 
         {/* ── Meaning & Purport ── */}
         <View className="mb-2">
@@ -260,4 +246,3 @@ export default function PasuramScreen() {
     </SafeAreaView>
   );
 }
-

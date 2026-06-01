@@ -2,7 +2,7 @@ import { getPasuramsByPrabhandham, toggleBookmark } from '@/database/prabhandham
 import { useLanguage } from '@/context/language-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import {
   Animated,
   FlatList,
@@ -15,20 +15,31 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { Pasuram, PasuramRow } from '@/components/pasuram-row';
 
+const PAGE_SIZE = 100;
+
 export default function PasuramListScreen() {
   const { prabhandham } = useLocalSearchParams<{ prabhandham: string }>();
   const router = useRouter();
   const { language, showFullLyrics } = useLanguage();
   const [pasurams, setPasurams] = useState<Pasuram[]>([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(0);
 
   useEffect(() => {
     if (!prabhandham) return;
+    setPage(0);
+    setLoading(true);
     getPasuramsByPrabhandham(prabhandham)
       .then((rows) => setPasurams(rows as Pasuram[]))
       .catch(console.error)
       .finally(() => setLoading(false));
   }, [prabhandham]);
+
+  const paginatedPasurams = useMemo(() => {
+    return pasurams.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+  }, [pasurams, page]);
+
+  const totalPages = Math.ceil(pasurams.length / PAGE_SIZE);
 
   const handleBookmarkToggle = useCallback(async (id: number, current: number) => {
     const newVal = await toggleBookmark(id, current);
@@ -38,7 +49,7 @@ export default function PasuramListScreen() {
   }, []);
 
   const handlePasuramPress = useCallback((id: number) => {
-    router.push({ pathname: '/(tabs)/pasuram', params: { id: String(id) } });
+    router.push({ pathname: '/pasuram', params: { id: String(id) } });
   }, [router]);
 
   return (
@@ -70,7 +81,7 @@ export default function PasuramListScreen() {
 
       <View className="flex-1">
         <FlatList
-          data={pasurams}
+          data={paginatedPasurams}
           keyExtractor={(item) => String(item.id)}
           contentContainerClassName="px-4 pt-2 pb-[120px]"
           showsVerticalScrollIndicator={false}
@@ -92,6 +103,29 @@ export default function PasuramListScreen() {
                 </Text>
               </View>
             )
+          }
+          ListFooterComponent={
+            totalPages > 1 ? (
+              <View className="flex-row justify-center items-center py-6 gap-6">
+                <TouchableOpacity
+                  disabled={page === 0}
+                  onPress={() => setPage((p) => Math.max(0, p - 1))}
+                  className="p-2 opacity-100 disabled:opacity-30"
+                >
+                  <Ionicons name="chevron-back" size={24} color="#E8904B" />
+                </TouchableOpacity>
+                <Text className="text-text-muted font-semibold">
+                  {page + 1} / {totalPages}
+                </Text>
+                <TouchableOpacity
+                  disabled={page === totalPages - 1}
+                  onPress={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+                  className="p-2 opacity-100 disabled:opacity-30"
+                >
+                  <Ionicons name="chevron-forward" size={24} color="#E8904B" />
+                </TouchableOpacity>
+              </View>
+            ) : null
           }
         />
 

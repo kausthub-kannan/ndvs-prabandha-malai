@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 export type Pasuram = {
   id: number;
-  si_no: string;
+  si_no: number;
   prabhandham: string;
   tamil_scripts: string;
   english_scripts: string;

@@ -1,12 +1,11 @@
 import { LanguageProvider } from '@/context/language-context';
 import { DarkTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
-import { SQLiteProvider } from 'expo-sqlite';
 import { StatusBar } from 'expo-status-bar';
-import { Suspense } from 'react';
-import { ActivityIndicator, View } from 'react-native';
 import 'react-native-reanimated';
+import { View } from 'react-native';
 import '../global.css';
+import GlobalNavbar from '@/components/global-navbar';
 
 export const unstable_settings = {
   anchor: '(tabs)',
@@ -16,22 +15,22 @@ export default function RootLayout() {
   return (
     <LanguageProvider>
       <ThemeProvider value={DarkTheme}>
-        <Suspense fallback={
-          <View className="flex-1 justify-center items-center bg-main">
-            <ActivityIndicator size="large" color="#E8904B" />
-          </View>
-        }>
-          <SQLiteProvider
-            databaseName="ndvs.db"
-            assetSource={{ assetId: require('../assets/db/ndvs.db') }}
-            useSuspense
-          >
-            <Stack>
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-            </Stack>
-          </SQLiteProvider>
-        </Suspense>
+        <View style={{ flex: 1, backgroundColor: '#181A1F' }}>
+          <Stack>
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+            <Stack.Screen name="pasurams" options={{ headerShown: false }} />
+            <Stack.Screen name="pasuram" options={{ headerShown: false }} />
+            <Stack.Screen name="general-info" options={{ headerShown: false }} />
+            <Stack.Screen name="acharyas" options={{ headerShown: false }} />
+            <Stack.Screen name="alwars" options={{ headerShown: false }} />
+            <Stack.Screen name="divya-deshams" options={{ headerShown: false }} />
+            <Stack.Screen name="favorites" options={{ headerShown: false }} />
+            <Stack.Screen name="about" options={{ headerShown: false }} />
+            <Stack.Screen name="glossory" options={{ headerShown: false }} />
+          </Stack>
+          <GlobalNavbar />
+        </View>
         <StatusBar style="light" />
       </ThemeProvider>
     </LanguageProvider>

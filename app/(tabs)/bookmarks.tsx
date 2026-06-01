@@ -1,4 +1,5 @@
 import { getBookmarkedPasurams, toggleBookmark } from '@/database/prabhandham';
+import { PasuramListItem } from '@/database/utils/db';
 import { useLanguage } from '@/context/language-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -14,15 +15,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 
-type Pasuram = {
-  id: number;
-  si_no: string;
-  prabhandham: string;
-  tamil_scripts: string;
-  english_scripts: string;
-  azhwar: string;
-  bookmark: number;
-};
+type Pasuram = PasuramListItem;
 
 function HeartButton({ onRemove }: { onRemove: () => void }) {
   const scale = React.useRef(new Animated.Value(1)).current;
@@ -122,7 +115,7 @@ export default function BookmarksScreen() {
   }, []);
 
   const handlePress = useCallback((id: number) => {
-    router.push({ pathname: '/(tabs)/pasuram', params: { id: String(id) } });
+    router.push({ pathname: '/pasuram', params: { id: String(id) } });
   }, [router]);
 
   return (

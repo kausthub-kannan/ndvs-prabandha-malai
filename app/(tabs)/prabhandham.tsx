@@ -75,7 +75,7 @@ export default function PrabhandhamScreen() {
   const router = useRouter();
 
   const handleCardPress = (prabhandham: string) => {
-    router.push({ pathname: '/(tabs)/pasurams', params: { prabhandham } });
+    router.push({ pathname: '/pasurams', params: { prabhandham } });
   };
 
   useEffect(() => {

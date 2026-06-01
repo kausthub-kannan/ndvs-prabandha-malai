@@ -1,12 +1,11 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
 import Feather from '@expo/vector-icons/Feather';
-import Navbar from '@/components/navbar';
 
 export default function TabLayout() {
   return (
     <Tabs
-      tabBar={(props) => <Navbar {...props} />}
+      tabBar={() => null}
       screenOptions={{
         headerShown: false,
       }}>
@@ -51,16 +50,7 @@ export default function TabLayout() {
         }}
       />
 
-      {/* Hidden routes — no tab bar entry */}
-      <Tabs.Screen name="pasurams" options={{ href: null }} />
-      <Tabs.Screen name="pasuram" options={{ href: null }} />
-      <Tabs.Screen name="favorites" options={{ href: null }} />
-      <Tabs.Screen name="about" options={{ href: null }} />
-      <Tabs.Screen name="glossory" options={{ href: null }} />
-      <Tabs.Screen name="acharyas" options={{ href: null }} />
-      <Tabs.Screen name="alwars" options={{ href: null }} />
-      <Tabs.Screen name="divya-deshams" options={{ href: null }} />
-      <Tabs.Screen name="general-info" options={{ href: null }} />
+      {/* Hidden routes moved to root Stack for proper back navigation */}
     </Tabs>
   );
 }

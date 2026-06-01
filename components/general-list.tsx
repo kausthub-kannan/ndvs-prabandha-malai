@@ -72,7 +72,7 @@ export default function GeneralList({ title, category, fetchList }: GeneralListP
     const handleItemPress = useCallback(
         (id: number) => {
             router.push({
-                pathname: '/(tabs)/general-info' as any,
+                pathname: '/general-info' as any,
                 params: { id: String(id), category },
             });
         },

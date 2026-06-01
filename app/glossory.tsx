@@ -30,7 +30,6 @@ export default function GlossaryScreen() {
     debounceTimer.current = setTimeout(() => {
       fetchGlossary(query);
     }, 400);
-
     return () => {
       if (debounceTimer.current) clearTimeout(debounceTimer.current);
     };
@@ -38,26 +37,15 @@ export default function GlossaryScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-main">
-      {/* Header */}
       <View className="px-5 pt-2.5 pb-2">
-        <TouchableOpacity
-          onPress={() => router.back()}
-          className="flex-row items-center mb-4"
-        >
+        <TouchableOpacity onPress={() => router.back()} className="flex-row items-center mb-4">
           <Ionicons name="chevron-back" size={20} color="#E8904B" />
-          <Text className="text-accent text-[15px] ml-1 font-semibold">
-            Back
-          </Text>
+          <Text className="text-accent text-[15px] ml-1 font-semibold">Back</Text>
         </TouchableOpacity>
-        <Text className="text-text-primary text-[28px] font-bold font-serif mb-1">
-          Glossary
-        </Text>
-        <Text className="text-text-muted text-[13px] mb-2">
-          Dictionary of terms
-        </Text>
+        <Text className="text-text-primary text-[28px] font-bold font-serif mb-1">Glossary</Text>
+        <Text className="text-text-muted text-[13px] mb-2">Dictionary of terms</Text>
       </View>
 
-      {/* Search Bar */}
       <View className="px-5 mb-4">
         <View className="flex-row items-center bg-surface border border-border-color rounded-2xl px-4 h-14">
           <MaterialIcons name="search" size={24} color="#A3AAB1" className="mr-2" />
@@ -78,10 +66,8 @@ export default function GlossaryScreen() {
         </View>
       </View>
 
-      {/* Divider */}
       <View className="h-px bg-border-color mx-5 mb-2" />
 
-      {/* Results List */}
       <View className="flex-1">
         {loading ? (
           <View className="flex-1 items-center justify-center">
@@ -95,20 +81,14 @@ export default function GlossaryScreen() {
             showsVerticalScrollIndicator={false}
             renderItem={({ item }) => (
               <View className="bg-surface rounded-xl mb-3 py-4 px-5 border border-border-color">
-                <Text className="text-accent text-[16px] font-bold tracking-[0.5px] uppercase mb-1.5">
-                  {item.word}
-                </Text>
-                <Text className="text-text-primary text-[15px] leading-[24px]">
-                  {item.definition}
-                </Text>
+                <Text className="text-accent text-[16px] font-bold tracking-[0.5px] uppercase mb-1.5">{item.word}</Text>
+                <Text className="text-text-primary text-[15px] leading-[24px]">{item.definition}</Text>
               </View>
             )}
             ListEmptyComponent={
               <View className="items-center mt-20">
                 <Ionicons name="book-outline" size={48} color="#3E464E" />
-                <Text className="text-text-muted mt-4 text-[15px]">
-                  No words found.
-                </Text>
+                <Text className="text-text-muted mt-4 text-[15px]">No words found.</Text>
               </View>
             }
           />
