@@ -14,19 +14,19 @@ module.exports = {
 
         // ── Semantic tokens – DARK theme (defaults) ─────────────────────────
         // Background layers
-        'main':         '#181A1F',   // deepest background
-        'surface':      '#1E2530',   // card / input background
-        'surface-alt':  '#3E464E',   // elevated surface / empty icon colour
+        'main': '#181A1F',   // deepest background
+        'surface': '#1E2530',   // card / input background
+        'surface-alt': '#3E464E',   // elevated surface / empty icon colour
 
         // Borders
         'border-color': '#2C3540',
 
         // Text
         'text-primary': '#ECEDEE',
-        'text-muted':   '#A3AAB1',
+        'text-muted': '#A3AAB1',
 
         // Brand accent
-        'accent':       '#E8904B',
+        'accent': '#E8904B',
 
         // ── Light-theme overrides (used via dark: variants later) ──────────
         // When you add light mode, define a parallel set here and swap via

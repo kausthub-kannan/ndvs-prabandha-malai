@@ -1,12 +1,12 @@
-import '../global.css';
+import { LanguageProvider } from '@/context/language-context';
 import { DarkTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
+import { SQLiteProvider } from 'expo-sqlite';
 import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
 import { Suspense } from 'react';
 import { ActivityIndicator, View } from 'react-native';
-import { SQLiteProvider } from 'expo-sqlite';
-import { LanguageProvider } from '@/context/language-context';
+import 'react-native-reanimated';
+import '../global.css';
 
 export const unstable_settings = {
   anchor: '(tabs)',
