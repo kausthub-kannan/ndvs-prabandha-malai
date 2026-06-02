@@ -100,7 +100,7 @@ export interface SearchTags {
 // Singleton DB connection
 // ---------------------------------------------------------------------------
 
-const DB_NAME = 'ndvs.db';
+const DB_NAME = "ndvs.db"
 
 /**
  * Required tables to verify the DB is healthy.
