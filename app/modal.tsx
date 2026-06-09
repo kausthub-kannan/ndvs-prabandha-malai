@@ -6,7 +6,7 @@ export default function ModalScreen() {
   return (
     <ThemedView className="flex-1 items-center justify-center p-5">
       <ThemedText type="title">This is a modal</ThemedText>
-      <Link href="/" dismissTo className="mt-[15px] py-[15px]">
+      <Link href="/" dismissTo className="mt-[0.9375rem] py-[0.9375rem]">
         <ThemedText type="link">Go to home screen</ThemedText>
       </Link>
     </ThemedView>

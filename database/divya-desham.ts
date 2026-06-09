@@ -10,7 +10,22 @@ export async function getDivyaDeshamsList(): Promise<DivyaDeshamListItem[]> {
 export async function getDivyaDeshamById(id: number): Promise<DivyaDeshamDetail | null> {
   const db = await ensureDb();
   return db.getFirstAsync<DivyaDeshamDetail>(
-    `SELECT id, name, place, state, info FROM divya_deshams WHERE id = ?;`,
+    `SELECT id, name, place, state, info, coordinates FROM divya_deshams WHERE id = ?;`,
     [id]
+  );
+}
+
+export interface DivyaDeshamCoordsItem {
+  id: number;
+  name: string;
+  coordinates: string;
+  place: string;
+  state: string;
+}
+
+export async function getDivyaDeshamsWithCoords(): Promise<DivyaDeshamCoordsItem[]> {
+  const db = await ensureDb();
+  return db.getAllAsync<DivyaDeshamCoordsItem>(
+    `SELECT id, name, coordinates, place, state FROM divya_deshams WHERE coordinates IS NOT NULL AND coordinates != '';`
   );
 }

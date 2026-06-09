@@ -7,6 +7,7 @@ import { useLanguage } from '@/context/language-context';
 import { getFilterTags, searchPasurams } from '@/database/search';
 import { toggleBookmark } from '@/database/prabhandham';
 import { Pasuram, PasuramRow } from '@/components/pasuram-row';
+import { useColors } from '@/hooks/use-colors';
 
 type FilterState = {
   azhwar: string[];
@@ -15,9 +16,18 @@ type FilterState = {
   rasa: string[];
 };
 
+const removeDiacritics = (str: string): string => {
+  try {
+    return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  } catch (e) {
+    return str;
+  }
+};
+
 export default function SearchScreen() {
   const router = useRouter();
   const { language, showFullLyrics } = useLanguage();
+  const colors = useColors();
   
   const [query, setQuery] = useState('');
   const [searchType, setSearchType] = useState<'lyrics' | 'meaning'>('lyrics');
@@ -25,6 +35,7 @@ export default function SearchScreen() {
   const [selectedTags, setSelectedTags] = useState<FilterState>({ azhwar: [], archavathara: [], avataram: [], rasa: [] });
   const [showFilters, setShowFilters] = useState(false);
   const [activeFilterCategory, setActiveFilterCategory] = useState<keyof FilterState>('azhwar');
+  const [tagSearchQuery, setTagSearchQuery] = useState('');
   
   const [results, setResults] = useState<Pasuram[]>([]);
   const [loading, setLoading] = useState(false);
@@ -34,6 +45,17 @@ export default function SearchScreen() {
   useEffect(() => {
     getFilterTags().then(setAvailableTags).catch(console.error);
   }, []);
+
+  // Reset tag search query when switching categories or opening/closing filters
+  useEffect(() => {
+    setTagSearchQuery('');
+  }, [activeFilterCategory, showFilters]);
+
+  const filteredTags = (availableTags[activeFilterCategory] || []).filter(tag => {
+    const normalizedTag = removeDiacritics(tag).toLowerCase();
+    const normalizedQuery = removeDiacritics(tagSearchQuery).toLowerCase();
+    return normalizedTag.includes(normalizedQuery);
+  });
 
   // Search execution
   const executeSearch = useCallback((currentQuery: string, type: 'lyrics'|'meaning', tags: FilterState) => {
@@ -90,21 +112,21 @@ export default function SearchScreen() {
   const activeFilterCount = Object.values(selectedTags).reduce((acc, curr) => acc + curr.length, 0);
 
   const filterCategories: { key: keyof FilterState; label: string }[] = [
-    { key: 'azhwar', label: 'Azhwar' },
-    { key: 'archavathara', label: 'Archavataram' },
-    { key: 'avataram', label: 'Avataram' },
-    { key: 'rasa', label: 'Rasa' },
+    { key: 'azhwar', label: 'Āḻvārs' },
+    { key: 'archavathara', label: 'Divya Deśam' },
+    { key: 'avataram', label: 'Avatāram' },
+    { key: 'rasa', label: 'Anubhavāḥ' },
   ];
 
   return (
     <SafeAreaView className="flex-1 bg-main">
       <View className="mt-5 px-5 pt-4 pb-2 z-10 bg-main">
         <View className="flex-row items-center bg-surface border border-border-color rounded-2xl px-4 h-14 mb-4">
-          <MaterialIcons name="search" size={24} color="#A3AAB1" className="mr-2" />
+          <MaterialIcons name="search" size={24} color={colors.textMuted} className="mr-2" />
           <TextInput
             className="flex-1 text-text-primary text-base"
             placeholder="Search verses, meaning, or Alwars..."
-            placeholderTextColor="#6B7280"
+            placeholderTextColor={colors.tabIconDefault}
             value={query}
             onChangeText={setQuery}
             returnKeyType="search"
@@ -112,7 +134,7 @@ export default function SearchScreen() {
           />
           {query.length > 0 && (
             <TouchableOpacity onPress={() => setQuery('')} className="p-2">
-              <Ionicons name="close-circle" size={20} color="#A3AAB1" />
+              <Ionicons name="close-circle" size={20} color={colors.textMuted} />
             </TouchableOpacity>
           )}
         </View>
@@ -136,9 +158,9 @@ export default function SearchScreen() {
 
           <TouchableOpacity 
             onPress={() => setShowFilters(true)}
-            className={`flex-row items-center px-4 py-2 rounded-xl border ${activeFilterCount > 0 ? 'bg-[#E8904B] border-accent' : 'bg-surface border-border-color'}`}
+            className={`flex-row items-center px-4 py-2 rounded-xl border ${activeFilterCount > 0 ? 'bg-accent border-accent' : 'bg-surface border-border-color'}`}
           >
-            <Ionicons name="filter" size={16} color={activeFilterCount > 0 ? '#181A1F' : '#A3AAB1'} />
+            <Ionicons name="filter" size={16} color={activeFilterCount > 0 ? colors.main : colors.textMuted} />
             <Text className={`ml-2 font-semibold text-sm ${activeFilterCount > 0 ? 'text-main' : 'text-text-primary'}`}>
               Filters {activeFilterCount > 0 ? `(${activeFilterCount})` : ''}
             </Text>
@@ -147,19 +169,19 @@ export default function SearchScreen() {
       </View>
 
       {/* Divider */}
-      <View className="h-[1px] bg-border-color mx-5 mb-2" />
+      <View className="h-[0.0625rem] bg-border-color mx-5 mb-2" />
 
       {/* Results List */}
       <View className="flex-1">
         {loading ? (
           <View className="flex-1 items-center justify-center">
-            <ActivityIndicator size="large" color="#E8904B" />
+            <ActivityIndicator size="large" color={colors.accent} />
           </View>
         ) : (
           <FlatList
             data={results}
             keyExtractor={(item) => String(item.id)}
-            contentContainerClassName="px-5 pt-2 pb-[100px]"
+            contentContainerClassName="px-5 pt-2 pb-[6.25rem]"
             showsVerticalScrollIndicator={false}
             renderItem={({ item }) => (
               <PasuramRow
@@ -173,15 +195,15 @@ export default function SearchScreen() {
             ListEmptyComponent={
               (!query.trim() && activeFilterCount === 0) ? (
                 <View className="items-center mt-20">
-                  <Ionicons name="search-outline" size={48} color="#3E464E" />
-                  <Text className="text-text-muted mt-4 text-[15px]">
+                  <Ionicons name="search-outline" size={48} color={colors.surfaceAlt} />
+                  <Text className="text-text-muted mt-4 text-[0.9375rem]">
                     Search by typing or applying filters.
                   </Text>
                 </View>
               ) : (
                 <View className="items-center mt-20">
-                  <Ionicons name="book-outline" size={48} color="#3E464E" />
-                  <Text className="text-text-muted mt-4 text-[15px]">
+                  <Ionicons name="book-outline" size={48} color={colors.surfaceAlt} />
+                  <Text className="text-text-muted mt-4 text-[0.9375rem]">
                     No pasurams found.
                   </Text>
                 </View>
@@ -201,11 +223,11 @@ export default function SearchScreen() {
               <View className="flex-row items-center">
                 {activeFilterCount > 0 && (
                   <TouchableOpacity onPress={clearFilters} className="mr-5">
-                    <Text className="text-[#E85D75] font-semibold text-base">Clear All</Text>
+                    <Text className="text-danger font-semibold text-base">Clear All</Text>
                   </TouchableOpacity>
                 )}
                 <TouchableOpacity onPress={() => setShowFilters(false)} className="bg-surface p-2 rounded-full">
-                  <Ionicons name="close" size={20} color="#A3AAB1" />
+                  <Ionicons name="close" size={20} color={colors.textMuted} />
                 </TouchableOpacity>
               </View>
             </View>
@@ -232,27 +254,50 @@ export default function SearchScreen() {
               </View>
 
               {/* Tags List */}
-              <View className="w-2/3 bg-main">
+              <View className="w-2/3 bg-main flex-1">
+                {/* Search bar inside filter category */}
+                <View className="px-4 pt-4 pb-2">
+                  <View className="flex-row items-center bg-surface border border-border-color rounded-xl px-3 h-10">
+                    <MaterialIcons name="search" size={18} color={colors.textMuted} className="mr-1.5" />
+                    <TextInput
+                      className="flex-1 text-text-primary text-sm p-0"
+                      placeholder={`Search ${filterCategories.find(c => c.key === activeFilterCategory)?.label || 'tags'}...`}
+                      placeholderTextColor={colors.tabIconDefault}
+                      value={tagSearchQuery}
+                      onChangeText={setTagSearchQuery}
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                    />
+                    {tagSearchQuery.length > 0 && (
+                      <TouchableOpacity onPress={() => setTagSearchQuery('')} className="p-1">
+                        <Ionicons name="close-circle" size={16} color={colors.textMuted} />
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                </View>
+
                 <FlatList
-                  data={availableTags[activeFilterCategory]}
+                  data={filteredTags}
                   keyExtractor={(item) => item}
-                  contentContainerClassName="p-4 pb-[100px]"
+                  contentContainerClassName="p-4 pb-[6.25rem]"
                   renderItem={({ item }) => {
                     const isSelected = selectedTags[activeFilterCategory].includes(item);
                     return (
                       <TouchableOpacity
                         onPress={() => toggleTag(activeFilterCategory, item)}
-                        className={`flex-row items-center justify-between p-3 mb-2 rounded-xl border ${isSelected ? 'bg-[#E8904B]/10 border-accent' : 'bg-surface border-border-color'}`}
+                        className={`flex-row items-center justify-between p-3 mb-2 rounded-xl border ${isSelected ? 'bg-accent/10 border-accent' : 'bg-surface border-border-color'}`}
                       >
                         <Text className={`flex-1 ${isSelected ? 'text-accent font-bold' : 'text-text-primary'} text-base mr-2`} numberOfLines={2}>
                           {item}
                         </Text>
-                        {isSelected && <Ionicons name="checkmark-circle" size={20} color="#E8904B" />}
+                        {isSelected && <Ionicons name="checkmark-circle" size={20} color={colors.accent} />}
                       </TouchableOpacity>
                     );
                   }}
                   ListEmptyComponent={
-                    <Text className="text-text-muted text-center mt-10">No tags available.</Text>
+                    <Text className="text-text-muted text-center mt-10">
+                      {tagSearchQuery ? 'No matching tags found.' : 'No tags available.'}
+                    </Text>
                   }
                 />
               </View>
@@ -262,7 +307,7 @@ export default function SearchScreen() {
             <View className="p-5 bg-main border-t border-border-color">
               <TouchableOpacity
                 onPress={() => setShowFilters(false)}
-                className="bg-[#E8904B] py-3.5 rounded-xl items-center"
+                className="bg-accent py-3.5 rounded-xl items-center"
               >
                 <Text className="text-main font-bold text-lg">
                   Show Results {activeFilterCount > 0 ? `(${results.length})` : ''}

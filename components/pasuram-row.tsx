@@ -12,35 +12,7 @@ export type Pasuram = {
   bookmark: number;
 };
 
-export function HeartButton({
-  bookmarked,
-  onToggle,
-}: {
-  bookmarked: boolean;
-  onToggle: () => void;
-}) {
-  const scale = React.useRef(new Animated.Value(1)).current;
-
-  const handlePress = () => {
-    Animated.sequence([
-      Animated.spring(scale, { toValue: 1.35, useNativeDriver: true, speed: 40, bounciness: 12 }),
-      Animated.spring(scale, { toValue: 1, useNativeDriver: true, speed: 30 }),
-    ]).start();
-    onToggle();
-  };
-
-  return (
-    <TouchableOpacity onPress={handlePress} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-      <Animated.View style={{ transform: [{ scale }] }}>
-        <Ionicons
-          name={bookmarked ? 'heart' : 'heart-outline'}
-          size={20}
-          color={bookmarked ? '#E85D75' : '#6B7280'}
-        />
-      </Animated.View>
-    </TouchableOpacity>
-  );
-}
+import { HeartButton } from './pasuram-heart-button';
 
 export function PasuramRow({
   item,
@@ -69,15 +41,15 @@ export function PasuramRow({
       {/* Text content fills the row */}
       <View className="flex-1">
         <Text
-          className="text-text-muted text-[11px] font-semibold tracking-[0.5px] mb-1 uppercase"
+          className="text-text-muted text-[0.6875rem] font-semibold tracking-[0.03125rem] mb-1 uppercase"
         >
           {item.si_no}
         </Text>
         <Text
-          className="text-text-primary text-[15px] leading-[22px] font-serif"
+          className="text-text-primary text-[0.9375rem] leading-[1.375rem] font-serif"
           numberOfLines={showFullLyrics ? undefined : 2}
         >
-          {displayText}
+          {displayText.replace(/\\/g, '')}
         </Text>
       </View>
 

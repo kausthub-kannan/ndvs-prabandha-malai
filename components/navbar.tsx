@@ -1,8 +1,11 @@
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import React from 'react';
 import { TouchableOpacity, View } from 'react-native';
+import { useColors } from '@/hooks/use-colors';
 
 export default function Navbar({ state, descriptors, navigation }: BottomTabBarProps) {
+    const colors = useColors();
+
     // Only render tabs that have a tabBarIcon (visible tabs — hidden routes won't have one)
     const visibleRoutes = state.routes.filter((route) => {
         const { options } = descriptors[route.key];
@@ -10,7 +13,7 @@ export default function Navbar({ state, descriptors, navigation }: BottomTabBarP
     });
 
     return (
-        <View className="flex-row bg-surface-alt border-t-0 h-[60px] items-center justify-around absolute bottom-0 left-2.5 right-2.5 mb-6 rounded-2xl elevation-none">
+        <View className="flex-row border-t-0 h-[3.75rem] items-center justify-around absolute bottom-0 left-2.5 right-2.5 mb-6 rounded-2xl elevation-none bg-surface-alt">
             {visibleRoutes.map((route) => {
                 const { options } = descriptors[route.key];
                 const isFocused = state.index === state.routes.indexOf(route);
@@ -34,7 +37,7 @@ export default function Navbar({ state, descriptors, navigation }: BottomTabBarP
                     });
                 };
 
-                const color = isFocused ? '#E8904B' : '#FFFFFF';
+                const color = isFocused ? colors.accent : colors.icon;
 
                 return (
                     <TouchableOpacity

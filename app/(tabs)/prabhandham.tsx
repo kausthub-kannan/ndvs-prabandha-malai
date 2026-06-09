@@ -1,78 +1,34 @@
 import { getPrabhandhamList } from '@/database/prabhandham';
+import { Card, PrabhandhamItem } from '@/components/prabhandham-card';
+import { useColors } from '@/hooks/use-colors';
+import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import React, { useEffect, useRef, useState } from 'react';
+import { useColorScheme } from 'nativewind';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  Animated,
-  Image,
+  FlatList,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-const ITEM_HEIGHT = 104;
-
-type PrabhandhamItem = {
-  prabhandham: string;
-  azhwar: string;
-  pasuram_count: number;
+const removeDiacritics = (str: string): string => {
+  try {
+    return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  } catch (e) {
+    return str;
+  }
 };
-
-function AnimatedCard({
-  item,
-  index,
-  scrollY,
-  onPress,
-}: {
-  item: PrabhandhamItem;
-  index: number;
-  scrollY: Animated.Value;
-  onPress: (prabhandham: string) => void;
-}) {
-  const inputRange = [
-    (index - 1.5) * ITEM_HEIGHT,
-    index * ITEM_HEIGHT,
-    (index + 1.5) * ITEM_HEIGHT,
-  ];
-
-  const opacity = scrollY.interpolate({
-    inputRange,
-    outputRange: [0.65, 1, 0.65],
-    extrapolate: 'clamp',
-  });
-
-  return (
-    <Animated.View className="mb-3 rounded-[14px] overflow-hidden bg-surface border border-border-color" style={{ opacity }}>
-      <TouchableOpacity
-        className="flex-row items-center p-3 h-[92px]"
-        activeOpacity={0.75}
-        onPress={() => onPress(item.prabhandham)}
-      >
-        <Image
-          source={require('@/assets/images/dummy.jpg')}
-          className="w-[78px] h-[78px] rounded-[10px] bg-surface"
-          resizeMode="cover"
-        />
-        <View className="flex-1 ml-[14px] justify-center">
-          <Text className="text-[17px] font-bold text-text-primary font-serif mb-[2px]" numberOfLines={2}>
-            {item.prabhandham}
-          </Text>
-          <Text className="text-[13px] text-text-muted italic mb-1">{item.azhwar}</Text>
-          <Text className="text-[12px] text-text-muted font-semibold tracking-[0.3px]">
-            {item.pasuram_count} Pasurams
-          </Text>
-        </View>
-      </TouchableOpacity>
-    </Animated.View>
-  );
-}
 
 export default function PrabhandhamScreen() {
   const [data, setData] = useState<PrabhandhamItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const scrollY = useRef(new Animated.Value(0)).current;
+  const [searchQuery, setSearchQuery] = useState('');
   const router = useRouter();
+  const colors = useColors();
 
   const handleCardPress = (prabhandham: string) => {
     router.push({ pathname: '/pasurams', params: { prabhandham } });
@@ -87,30 +43,54 @@ export default function PrabhandhamScreen() {
       .finally(() => setLoading(false));
   }, []);
 
+  const filteredData = useMemo(() => {
+    if (!searchQuery.trim()) return data;
+    const queryNorm = removeDiacritics(searchQuery).toLowerCase();
+    return data.filter((item) => {
+      const prabhandhamNorm = removeDiacritics(item.prabhandham).toLowerCase();
+      const azhwarNorm = removeDiacritics(item.azhwar).toLowerCase();
+      return prabhandhamNorm.includes(queryNorm) || azhwarNorm.includes(queryNorm);
+    });
+  }, [data, searchQuery]);
+
   return (
     <SafeAreaView className="flex-1 bg-main">
-      <Text className="text-[36px] font-bold text-text-primary text-center my-5 font-serif tracking-[0.5px]">
-        Prabhandham
+      <Text className="text-3xl font-bold text-text-primary text-center my-5 font-serif tracking-[0.03125rem]">
+        Prabhandha Mālai
       </Text>
 
+      {/* Quick Search bar */}
+      <View className="mx-4 mb-4 flex-row items-center bg-surface border border-border-color rounded-xl px-3.5 h-11">
+        <Ionicons name="search" size={18} color={colors.tabIconDefault} className="mr-2" />
+        <TextInput
+          className="flex-1 text-text-primary text-sm p-0"
+          placeholder="Quick search by name or Āḻvār..."
+          placeholderTextColor={colors.tabIconDefault}
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          autoCapitalize="none"
+          autoCorrect={false}
+        />
+        {searchQuery.length > 0 && (
+          <TouchableOpacity onPress={() => setSearchQuery('')} className="p-1">
+            <Ionicons name="close-circle" size={16} color={colors.textMuted} />
+          </TouchableOpacity>
+        )}
+      </View>
+
       <View className="flex-1 relative">
-        <Animated.FlatList
-          data={data}
+        <FlatList
+          data={filteredData}
           keyExtractor={(item, i) => `${item.prabhandham}-${i}`}
-          contentContainerClassName="px-4 pt-[18px] pb-[110px]"
-          onScroll={Animated.event(
-            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-            { useNativeDriver: true }
-          )}
-          scrollEventThrottle={16}
+          contentContainerClassName="px-4 pt-[1.125rem] pb-[6.875rem]"
           showsVerticalScrollIndicator={false}
-          renderItem={({ item, index }) => (
-            <AnimatedCard item={item} index={index} scrollY={scrollY} onPress={handleCardPress} />
+          renderItem={({ item }) => (
+            <Card item={item} onPress={handleCardPress} />
           )}
           ListEmptyComponent={
             loading ? null : (
-              <Text className="text-text-muted text-center mt-[60px] text-base">
-                No prabhandhams found.
+              <Text className="text-text-muted text-center mt-[3.75rem] text-base">
+                {searchQuery ? 'No matching prabhandhams found.' : 'No prabhandhams found.'}
               </Text>
             )
           }
@@ -118,14 +98,14 @@ export default function PrabhandhamScreen() {
 
         {/* Gradient fade at the top — blends into title area */}
         <LinearGradient
-          colors={['#181A1F', 'rgba(24,26,31,0.55)', 'transparent']}
-          className="absolute top-0 left-0 right-0 h-10 z-[1]"
+          colors={[colors.main, `${colors.main}8C`, 'transparent']}
+          className="absolute top-0 left-0 right-0 h-9 z-[1]"
           pointerEvents="none"
         />
 
         {/* Gradient fade at the bottom — blends into navbar */}
         <LinearGradient
-          colors={['transparent', 'rgba(24,26,31,0.85)', '#181A1F']}
+          colors={['transparent', `${colors.main}D9`, colors.main]}
           className="absolute bottom-0 left-0 right-0 h-20 z-[1]"
           pointerEvents="none"
         />

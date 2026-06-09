@@ -3,19 +3,17 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useColorScheme } from 'nativewind';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import {
     FlatList,
     Text,
     TouchableOpacity,
-    View
+    View,
+    TextInput
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { GeneralItem, ItemRow } from './item-row';
 
-type GeneralItem = {
-    id: number;
-    name: string;
-};
 
 type GeneralListProps = {
     title: string;
@@ -23,36 +21,15 @@ type GeneralListProps = {
     fetchList: () => Promise<GeneralItem[]>;
 };
 
-function ItemRow({
-    item,
-    onPress,
-}: {
-    item: GeneralItem;
-    onPress: (id: number) => void;
-}) {
-    const { colorScheme } = useColorScheme();
-    const colors = Colors[colorScheme ?? "dark"];
-    return (
-        <TouchableOpacity
-            onPress={() => onPress(item.id)}
-            activeOpacity={0.72}
-            className="flex-row items-center bg-surface rounded-xl mb-2.5 py-4 px-[18px] border border-border-color"
-        >
-            <View className="flex-1">
-                <Text
-                    className="text-text-primary text-[17px] font-semibold font-serif"
-                    numberOfLines={2}
-                >
-                    {item.name}
-                </Text>
-            </View>
+const removeDiacritics = (str: string): string => {
+    try {
+        return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    } catch (e) {
+        return str;
+    }
+};
 
-            <View className="ml-3">
-                <Ionicons name="chevron-forward" size={18} color={colors.tabIconDefault} />
-            </View>
-        </TouchableOpacity>
-    );
-}
+
 
 export default function GeneralList({ title, category, fetchList }: GeneralListProps) {
     const { colorScheme } = useColorScheme();
@@ -61,6 +38,7 @@ export default function GeneralList({ title, category, fetchList }: GeneralListP
     const router = useRouter();
     const [items, setItems] = useState<GeneralItem[]>([]);
     const [loading, setLoading] = useState(true);
+    const [searchQuery, setSearchQuery] = useState('');
 
     useEffect(() => {
         fetchList()
@@ -68,6 +46,15 @@ export default function GeneralList({ title, category, fetchList }: GeneralListP
             .catch(console.error)
             .finally(() => setLoading(false));
     }, [fetchList]);
+
+    const filteredItems = useMemo(() => {
+        if (!searchQuery.trim()) return items;
+        const queryNorm = removeDiacritics(searchQuery).toLowerCase();
+        return items.filter((item) => {
+            const nameNorm = removeDiacritics(item.name).toLowerCase();
+            return nameNorm.includes(queryNorm);
+        });
+    }, [items, searchQuery]);
 
     const handleItemPress = useCallback(
         (id: number) => {
@@ -88,19 +75,50 @@ export default function GeneralList({ title, category, fetchList }: GeneralListP
                     className="flex-row items-center mb-4"
                 >
                     <Ionicons name="chevron-back" size={20} color={colors.accent} />
-                    <Text className="text-accent text-[15px] ml-1 font-semibold">
+                    <Text className="text-accent text-[0.9375rem] ml-1 font-semibold">
                         Back
                     </Text>
                 </TouchableOpacity>
                 <Text
-                    className="text-text-primary text-[28px] font-bold font-serif mb-1"
+                    className="text-text-primary text-[1.75rem] font-bold font-serif mb-1"
                     numberOfLines={2}
                 >
                     {title}
                 </Text>
-                <Text className="text-text-muted text-[13px] mb-1">
-                    {items.length} {items.length === 1 ? 'entry' : 'entries'}
+                <Text className="text-text-muted text-[0.8125rem] mb-1">
+                    {filteredItems.length} {filteredItems.length === 1 ? 'entry' : 'entries'} {searchQuery.trim() ? '(filtered)' : ''}
                 </Text>
+
+                {/* Quick Search bar */}
+                <View className="flex-row items-center mt-2 gap-2">
+                    <View className="flex-1 flex-row items-center bg-surface border border-border-color rounded-xl px-3.5 h-11">
+                        <Ionicons name="search" size={18} color={colors.tabIconDefault} className="mr-2" />
+                        <TextInput
+                            className="flex-1 text-text-primary text-sm p-0"
+                            placeholder={`Quick search ${title.toLowerCase()}...`}
+                            placeholderTextColor={colors.tabIconDefault}
+                            value={searchQuery}
+                            onChangeText={setSearchQuery}
+                            autoCapitalize="none"
+                            autoCorrect={false}
+                        />
+                        {searchQuery.length > 0 && (
+                            <TouchableOpacity onPress={() => setSearchQuery('')} className="p-1">
+                                <Ionicons name="close-circle" size={16} color={colors.textMuted} />
+                            </TouchableOpacity>
+                        )}
+                    </View>
+
+                    {category === 'divya-deshams' && (
+                        <TouchableOpacity
+                            onPress={() => router.push('/nearby-divya-deshams')}
+                            className="w-11 h-11 rounded-xl bg-surface border border-border-color items-center justify-center"
+                            activeOpacity={0.72}
+                        >
+                            <Ionicons name="compass" size={20} color={colors.accent} />
+                        </TouchableOpacity>
+                    )}
+                </View>
             </View>
 
             {/* Divider */}
@@ -108,9 +126,9 @@ export default function GeneralList({ title, category, fetchList }: GeneralListP
 
             <View className="flex-1">
                 <FlatList
-                    data={items}
+                    data={filteredItems}
                     keyExtractor={(item) => String(item.id)}
-                    contentContainerClassName="px-4 pt-2 pb-[120px]"
+                    contentContainerClassName="px-4 pt-2 pb-[7.5rem]"
                     showsVerticalScrollIndicator={false}
                     renderItem={({ item }) => (
                         <ItemRow item={item} onPress={handleItemPress} />
@@ -119,8 +137,8 @@ export default function GeneralList({ title, category, fetchList }: GeneralListP
                         loading ? null : (
                             <View className="items-center mt-20">
                                 <Ionicons name="list-outline" size={48} color={colors.surfaceAlt} />
-                                <Text className="text-text-muted mt-4 text-[15px]">
-                                    No entries found.
+                                <Text className="text-text-muted mt-4 text-[0.9375rem]">
+                                    {searchQuery ? 'No matching entries found.' : 'No entries found.'}
                                 </Text>
                             </View>
                         )

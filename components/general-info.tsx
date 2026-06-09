@@ -1,12 +1,16 @@
 import { getAcharyaById } from '@/database/acharyas';
 import { getAlwarById } from '@/database/alwar';
 import { getDivyaDeshamById } from '@/database/divya-desham';
+import { useColors } from '@/hooks/use-colors';
+import MapEmbed from './map-embed';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useColorScheme } from 'nativewind';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   Image,
+  Platform,
   ScrollView,
   Text,
   TouchableOpacity,
@@ -19,27 +23,47 @@ type TagItem = {
   value: string;
 };
 
-// Static image maps — add require() entries here when images are placed in assets/images/<category>/<name>.png
-// Example: 'Ramanuja': require('@/assets/images/acharyas/Ramanuja.png'),
-const ACHARYA_IMAGES: Record<string, any> = {};
-const ALWAR_IMAGES: Record<string, any> = {};
-const DIVYA_DESHAM_IMAGES: Record<string, any> = {};
+type ThemedImage = { light: any; dark: any };
 
-const IMAGE_MAPS: Record<string, Record<string, any>> = {
+// Static image maps using new light and dark directories
+const ACHARYA_IMAGES: Record<string, ThemedImage> = {
+};
+
+const ALWAR_IMAGES: Record<string, ThemedImage> = {
+  'Bhūtat Āḻvār': { light: require('@/assets/images/light/Bhūtat Āḻvār.jpg'), dark: require('@/assets/images/dark/Bhūtat Āḻvār Dark.jpg') },
+  'Kulasekara Āḻvār': { light: require('@/assets/images/light/Kulasekara Āḻvār.jpg'), dark: require('@/assets/images/dark/Kulasekara Āḻvār Dark.jpg') },
+  'Madhurakavi Āḻvār': { light: require('@/assets/images/light/Madhurakavi Āḻvār.jpg'), dark: require('@/assets/images/dark/Madhurakavi Āḻvār Dark.jpg') },
+  'Nammāḻvār': { light: require('@/assets/images/light/Nammāḻvār.jpg'), dark: require('@/assets/images/dark/Nammāḻvār Dark.jpg') },
+  'Periyāḻvār': { light: require('@/assets/images/light/Periyāḻvār.jpg'), dark: require('@/assets/images/dark/Periyāḻvār Dark.jpg') },
+  'Pey Āḻvār': { light: require('@/assets/images/light/Pey Āḻvār.jpg'), dark: require('@/assets/images/dark/Pey Āḻvār Dark.jpg') },
+  'Poygai Āḻvār': { light: require('@/assets/images/light/Poygai Āḻvār.jpg'), dark: require('@/assets/images/dark/Poygai Āḻvār Dark.jpg') },
+  'Tirumalisai Āḻvār': { light: require('@/assets/images/light/Tirumalisai Āḻvār.jpg'), dark: require('@/assets/images/dark/Tirumalisai Āḻvār Dark.jpg') },
+  'Tirumaṅgai Āḻvār': { light: require('@/assets/images/light/Tirumaṅgai Āḻvār.jpg'), dark: require('@/assets/images/dark/Tirumaṅgai Āḻvār Dark.jpg') },
+  'Tiruppāṇ Āḻvār': { light: require('@/assets/images/light/Tiruppāṇ Āḻvār.jpg'), dark: require('@/assets/images/dark/Tiruppāṇ Āḻvār Dark.jpg') },
+  'Toṇḍaraḍippoḍi Āḻvār': { light: require('@/assets/images/light/Toṇḍaraḍippoḍi Āḻvār.jpg'), dark: require('@/assets/images/dark/Toṇḍaraḍippoḍi Āḻvār Dark.jpg') },
+  'Āṇḍāḻ': { light: require('@/assets/images/light/Āṇḍāḻ.jpg'), dark: require('@/assets/images/dark/Āṇḍāḻ Dark.jpg') },
+};
+
+const DIVYA_DESHAM_IMAGES: Record<string, ThemedImage> = {
+};
+
+export const IMAGE_MAPS: Record<string, Record<string, ThemedImage>> = {
   acharyas: ACHARYA_IMAGES,
   alwars: ALWAR_IMAGES,
   'divya-deshams': DIVYA_DESHAM_IMAGES,
 };
 
-function getImageSource(category: string, name: string): any | null {
+export function getImageSource(category: string, name: string, isDark: boolean): any | null {
   const map = IMAGE_MAPS[category];
   if (!map) return null;
-  return map[name] || null;
+  const themedImage = map[name];
+  if (!themedImage) return null;
+  return isDark ? themedImage.dark : themedImage.light;
 }
 
 function extractTags(item: Record<string, any>): TagItem[] {
   const tags: TagItem[] = [];
-  const skipKeys = ['id', 'name', 'bio', 'info'];
+  const skipKeys = ['id', 'name', 'bio', 'info', 'coordinates'];
 
   for (const [key, value] of Object.entries(item)) {
     if (skipKeys.includes(key)) continue;
@@ -75,9 +99,56 @@ const TAG_COLORS = [
   { bg: '#CCFBF1', text: '#115E59' },
 ];
 
+const renderFormattedContent = (content: string, justify = false) => {
+  if (!content) return null;
+  const parts = content.split(/(<verse>[\s\S]*?<\/verse>)/g);
+  return (
+    <View className="pr-2">
+      {parts.map((part, index) => {
+        if (part.startsWith('<verse>') && part.endsWith('</verse>')) {
+          const verseText = part.substring(7, part.length - 8).trim();
+          return (
+            <Text
+              key={index}
+              style={{
+                fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
+                lineHeight: 30,
+                textAlign: 'center',
+              }}
+              className="text-lyric-text text-[1rem] tracking-[0.01875rem] my-3"
+              selectable={true}
+            >
+              {verseText}
+            </Text>
+          );
+        } else {
+          const trimmed = part.trim();
+          if (!trimmed) return null;
+          return (
+            <Text
+              key={index}
+              style={{
+                fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
+                lineHeight: 30,
+              }}
+              className={`text-text-muted text-[1rem] tracking-[0.0125rem] text-justify`}
+              selectable={true}
+            >
+              {trimmed}
+            </Text>
+          );
+        }
+      })}
+    </View>
+  );
+};
+
 export default function GeneralInfo() {
   const { id, category } = useLocalSearchParams<{ id: string; category: string }>();
   const router = useRouter();
+  const colors = useColors();
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === 'dark';
 
   const [item, setItem] = useState<Record<string, any> | null>(null);
   const [loading, setLoading] = useState(true);
@@ -113,7 +184,21 @@ export default function GeneralInfo() {
 
   const description = getDescriptionField(item, category);
   const tags = extractTags(item);
-  const imageSource = getImageSource(category, item.name);
+  const imageSource = getImageSource(category, item.name, isDark);
+
+  let lat: number | null = null;
+  let lng: number | null = null;
+  if (category === 'divya-deshams' && item.coordinates) {
+    const parts = item.coordinates.split(',');
+    if (parts.length === 2) {
+      const parsedLat = parseFloat(parts[0].trim());
+      const parsedLng = parseFloat(parts[1].trim());
+      if (!isNaN(parsedLat) && !isNaN(parsedLng)) {
+        lat = parsedLat;
+        lng = parsedLng;
+      }
+    }
+  }
 
   const categoryTitle = category
     .replace(/-/g, ' ')
@@ -122,37 +207,42 @@ export default function GeneralInfo() {
   return (
     <SafeAreaView className="flex-1 bg-main">
       {/* Top Bar */}
-      <View className="px-[18px] py-2.5">
+      <View className="px-[1.125rem] py-2.5">
         <TouchableOpacity
           onPress={() => router.back()}
           className="flex-row items-center"
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
-          <Ionicons name="chevron-back" size={22} color="#E8904B" />
-          <Text className="text-accent text-[15px] font-semibold ml-0.5">Back</Text>
+          <Ionicons name="chevron-back" size={22} color={colors.accent} />
+          <Text className="text-accent text-[0.9375rem] font-semibold ml-0.5">Back</Text>
         </TouchableOpacity>
       </View>
 
       <ScrollView
-        contentContainerClassName="px-6 pb-[130px]"
+        contentContainerClassName="pl-6 pr-5 pb-[8.125rem]"
         showsVerticalScrollIndicator={false}
       >
+        {/* ── Header block ── */}
+        <View className="mb-[1.125rem]">
+          <Text className="text-accent text-[0.8125rem] font-bold tracking-[0.075rem] uppercase mb-1.5">{categoryTitle}</Text>
+          <Text
+            style={{ fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }) }}
+            className="text-text-primary text-[1.625rem] font-bold tracking-[0.01875rem]"
+          >
+            {item.name}
+          </Text>
+        </View>
+
         {/* Image — only rendered if a static require exists in the map */}
         {imageSource ? (
           <View className="items-center mb-5">
             <Image
               source={imageSource}
-              className="w-[160px] h-[200px] rounded-2xl bg-surface"
+              className="w-40 h-[12.5rem] rounded-2xl bg-surface"
               resizeMode="cover"
             />
           </View>
         ) : null}
-
-        {/* ── Header block ── */}
-        <View className="mb-[18px]">
-          <Text className="text-accent text-[13px] font-bold tracking-[1.2px] uppercase mb-1.5">{categoryTitle}</Text>
-          <Text className="text-text-primary text-[26px] font-bold font-serif tracking-[0.3px]">{item.name}</Text>
-        </View>
 
         {/* Tags */}
         {tags.length > 0 ? (
@@ -164,7 +254,7 @@ export default function GeneralInfo() {
                   key={`tag-${idx}`}
                   className="px-2.5 py-1.5 rounded-md items-center justify-center" style={{ backgroundColor: colorScheme.bg }}
                 >
-                  <Text className="text-[11px] font-bold tracking-[0.2px]" style={{ color: colorScheme.text }}>
+                  <Text className="text-[0.6875rem] font-bold tracking-[0.0125rem]" style={{ color: colorScheme.text }}>
                     {tag.label}: {tag.value}
                   </Text>
                 </View>
@@ -176,21 +266,31 @@ export default function GeneralInfo() {
         {/* ── Thin divider ── */}
         <View className="h-px bg-border-color mb-6" />
 
+        {/* ── Map Embed ── */}
+        {lat !== null && lng !== null ? (
+          <View className="mb-[1.625rem]">
+            <Text className="text-accent text-[0.6875rem] font-bold tracking-[0.0875rem] uppercase mb-2.5">
+              Location
+            </Text>
+            <MapEmbed lat={lat} lng={lng} placeName={item.name} />
+          </View>
+        ) : null}
+
         {/* ── Description ── */}
         {description ? (
-          <View className="mb-[26px]">
-            <Text className="text-accent text-[11px] font-bold tracking-[1.4px] uppercase mb-2.5">
+          <View className="mb-[1.625rem]">
+            <Text className="text-accent text-[0.6875rem] font-bold tracking-[0.0875rem] uppercase mb-2.5">
               {category === 'divya-deshams' ? 'About' : 'Biography'}
             </Text>
-            <Text className="text-text-muted text-[15px] leading-[26px] tracking-[0.2px]">{description}</Text>
+            {renderFormattedContent(description, true)}
           </View>
         ) : null}
       </ScrollView>
 
       {/* Bottom gradient */}
       <LinearGradient
-        colors={['transparent', 'rgba(24,26,31,0.8)', '#181A1F']}
-        className="absolute bottom-0 left-0 right-0 h-[90px]"
+        colors={['transparent', `${colors.main}CC`, colors.main]}
+        className="absolute bottom-0 left-0 right-0 h-[5.625rem]"
         pointerEvents="none"
       />
     </SafeAreaView>

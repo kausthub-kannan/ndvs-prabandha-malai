@@ -2,6 +2,7 @@ import Feather from '@expo/vector-icons/Feather';
 import { usePathname, useRouter } from 'expo-router';
 import React from 'react';
 import { TouchableOpacity, View } from 'react-native';
+import { useColors } from '@/hooks/use-colors';
 
 type Tab = {
   name: string;
@@ -10,7 +11,7 @@ type Tab = {
 };
 
 const TABS: Tab[] = [
-  { name: 'profile',     icon: 'settings', route: '/(tabs)/profile' },
+  { name: 'settings',     icon: 'settings', route: '/(tabs)/settings' },
   { name: 'search',      icon: 'search',   route: '/(tabs)/search' },
   { name: 'index',       icon: 'home',     route: '/(tabs)/' },
   { name: 'prabhandham', icon: 'book',     route: '/(tabs)/prabhandham' },
@@ -20,6 +21,7 @@ const TABS: Tab[] = [
 export default function GlobalNavbar() {
   const router = useRouter();
   const pathname = usePathname();
+  const colors = useColors();
 
   // Determine which tab is "active" based on current pathname
   const getActiveTab = () => {
@@ -33,17 +35,8 @@ export default function GlobalNavbar() {
 
   return (
     <View
+      className="absolute bottom-6 left-2.5 right-2.5 h-[3.75rem] flex-row items-center justify-around rounded-2xl bg-surface"
       style={{
-        position: 'absolute',
-        bottom: 24,
-        left: 10,
-        right: 10,
-        height: 60,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-around',
-        backgroundColor: '#2a2e35ff',
-        borderRadius: 16,
         // Shadow for Android
         elevation: 8,
         // Shadow for iOS
@@ -55,7 +48,7 @@ export default function GlobalNavbar() {
     >
       {TABS.map((tab) => {
         const isFocused = activeTab === tab.name;
-        const color = isFocused ? '#E8904B' : '#FFFFFF';
+        const color = isFocused ? colors.accent : colors.icon;
         const iconSize = 28 * 0.85;
 
         return (
@@ -64,7 +57,7 @@ export default function GlobalNavbar() {
             onPress={() => router.push(tab.route as any)}
             accessibilityRole="button"
             accessibilityState={isFocused ? { selected: true } : {}}
-            style={{ flex: 1, alignItems: 'center', justifyContent: 'center', height: '100%' }}
+            className="flex-1 items-center justify-center h-full"
           >
             <Feather name={tab.icon} size={iconSize} color={color} />
           </TouchableOpacity>

@@ -1,6 +1,7 @@
-import { getAdjacentPasuramIds, getPasuramById, toggleBookmark } from '@/database/prabhandham';
-import { PasuramDetail, AdjacentPasuramIds } from '@/database/utils/db';
 import { useLanguage } from '@/context/language-context';
+import { getAdjacentPasuramIds, getPasuramById, toggleBookmark } from '@/database/prabhandham';
+import { AdjacentPasuramIds, PasuramDetail } from '@/database/utils/db';
+import { useColors } from '@/hooks/use-colors';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -9,65 +10,19 @@ import {
   Animated,
   Dimensions,
   PanResponder,
+  Platform,
   ScrollView,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
+import { GlowHeart } from '@/components/glow-heart';
+import { SectionBlock } from '@/components/section-block';
 type Adjacent = AdjacentPasuramIds;
 
 const SCREEN_W = Dimensions.get('window').width;
 
-// ─── Glowing heart ───────────────────────────────────────────────────────────
-function GlowHeart({ bookmarked, onToggle }: { bookmarked: boolean; onToggle: () => void }) {
-  const scale = useRef(new Animated.Value(1)).current;
-  const glowOpacity = useRef(new Animated.Value(bookmarked ? 1 : 0)).current;
-
-  useEffect(() => {
-    Animated.timing(glowOpacity, {
-      toValue: bookmarked ? 1 : 0,
-      duration: 280,
-      useNativeDriver: true,
-    }).start();
-  }, [bookmarked]);
-
-  const handlePress = () => {
-    Animated.sequence([
-      Animated.spring(scale, { toValue: 1.4, useNativeDriver: true, speed: 50, bounciness: 14 }),
-      Animated.spring(scale, { toValue: 1, useNativeDriver: true, speed: 30 }),
-    ]).start();
-    onToggle();
-  };
-
-  return (
-    <TouchableOpacity onPress={handlePress} hitSlop={{ top: 14, bottom: 14, left: 14, right: 14 }}>
-      <Animated.View style={{ transform: [{ scale }] }}>
-        <Animated.View
-          className="absolute -top-[6px] -left-[6px] -right-[6px] -bottom-[6px] rounded-[24px] bg-[#E85D75]"
-          style={{ opacity: Animated.multiply(glowOpacity, 0.3) }}
-        />
-        <Ionicons
-          name={bookmarked ? 'heart' : 'heart-outline'}
-          size={28}
-          color={bookmarked ? '#E85D75' : '#6B7280'}
-        />
-      </Animated.View>
-    </TouchableOpacity>
-  );
-}
-
-// ─── Section block ────────────────────────────────────────────────────────────
-function SectionBlock({ title, content }: { title: string; content: string }) {
-  if (!content) return null;
-  return (
-    <View className="mb-[26px]">
-      <Text className="text-accent text-[11px] font-bold tracking-[1.4px] uppercase mb-2.5">{title}</Text>
-      <Text className="text-text-muted text-[15px] leading-[26px] tracking-[0.2px]">{content}</Text>
-    </View>
-  );
-}
 
 const splitTags = (val: string | null | undefined) => {
   if (!val) return [];
@@ -79,6 +34,7 @@ export default function PasuramScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { language } = useLanguage();
+  const colors = useColors();
 
   const [pasuram, setPasuram] = useState<PasuramDetail | null>(null);
   const [adjacent, setAdjacent] = useState<Adjacent>({ prevId: null, nextId: null });
@@ -210,39 +166,27 @@ export default function PasuramScreen() {
     <SafeAreaView className="flex-1 bg-main">
       {/* ── Top Bar — Prev / serial / Next (stays fixed, no animation) ── */}
       <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          paddingHorizontal: 16,
-          paddingVertical: 10,
-          borderBottomWidth: 1,
-          borderBottomColor: 'rgba(232,144,75,0.12)',
-        }}
+        className="flex-row items-center justify-between px-4 py-2.5 border-b"
+        style={{ borderBottomColor: `${colors.accent}1F` }}
       >
         {/* Prev */}
         <TouchableOpacity
           onPress={() => navigateTo(adjacent.prevId, -1)}
           disabled={!adjacent.prevId}
           hitSlop={{ top: 10, bottom: 10, left: 8, right: 8 }}
+          className="flex-row items-center py-1.5 px-2.5 rounded-[1.125rem] min-w-[4.75rem]"
           style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            paddingVertical: 6,
-            paddingHorizontal: 10,
-            borderRadius: 18,
-            backgroundColor: adjacent.prevId ? 'rgba(232,144,75,0.12)' : 'rgba(255,255,255,0.04)',
+            backgroundColor: adjacent.prevId ? `${colors.accent}1F` : 'rgba(255,255,255,0.04)',
             opacity: adjacent.prevId ? 1 : 0.35,
-            minWidth: 76,
           }}
         >
-          <Ionicons name="chevron-back" size={16} color="#E8904B" />
-          <Text style={{ color: '#E8904B', fontSize: 13, fontWeight: '600', marginLeft: 2 }}>Prev</Text>
+          <Ionicons name="chevron-back" size={16} color={colors.accent} />
+          <Text className="text-accent text-[0.8125rem] font-semibold ml-0.5">Prev</Text>
         </TouchableOpacity>
 
         {/* Serial number */}
         <Text
-          style={{ color: '#9CA3AF', fontSize: 13, fontWeight: '600', letterSpacing: 0.4 }}
+          className="text-text-muted text-[0.8125rem] font-semibold tracking-[0.025rem]"
           numberOfLines={1}
         >
           {pasuram.si_no}
@@ -253,20 +197,14 @@ export default function PasuramScreen() {
           onPress={() => navigateTo(adjacent.nextId, 1)}
           disabled={!adjacent.nextId}
           hitSlop={{ top: 10, bottom: 10, left: 8, right: 8 }}
+          className="flex-row items-center py-1.5 px-2.5 rounded-[1.125rem] min-w-[4.75rem] justify-end"
           style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            paddingVertical: 6,
-            paddingHorizontal: 10,
-            borderRadius: 18,
-            backgroundColor: adjacent.nextId ? 'rgba(232,144,75,0.12)' : 'rgba(255,255,255,0.04)',
+            backgroundColor: adjacent.nextId ? `${colors.accent}1F` : 'rgba(255,255,255,0.04)',
             opacity: adjacent.nextId ? 1 : 0.35,
-            minWidth: 76,
-            justifyContent: 'flex-end',
           }}
         >
-          <Text style={{ color: '#E8904B', fontSize: 13, fontWeight: '600', marginRight: 2 }}>Next</Text>
-          <Ionicons name="chevron-forward" size={16} color="#E8904B" />
+          <Text className="text-accent text-[0.8125rem] font-semibold mr-0.5">Next</Text>
+          <Ionicons name="chevron-forward" size={16} color={colors.accent} />
         </TouchableOpacity>
       </View>
 
@@ -274,24 +212,24 @@ export default function PasuramScreen() {
       <Animated.View
         style={{
           flex: 1,
-          transform: [{ translateX: slideAnim }],
-          overflow: 'hidden',
+          transform: [{ translateX: slideAnim }]
+          // overflow: 'hidden',
         }}
         {...panResponder.panHandlers}
       >
         <ScrollView
           ref={scrollRef}
-          contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 130 }}
+          contentContainerClassName="pl-6 pr-5 pb-[8.125rem]"
           showsVerticalScrollIndicator={false}
         >
           {/* Header block */}
-          <View style={{ marginTop: 20, marginBottom: 22 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-              <View style={{ flex: 1, marginRight: 12 }}>
-                <Text className="text-accent text-[13px] font-bold tracking-[1.2px] uppercase mb-1.5">
+          <View className="mt-5 mb-[1.375rem]">
+            <View className="flex-row items-start justify-between">
+              <View className="flex-1 mr-3">
+                <Text className="text-accent text-[0.8125rem] font-bold tracking-[0.075rem] uppercase mb-1.5">
                   {pasuram.prabhandham}
                 </Text>
-                <Text className="text-gray-500 text-xs tracking-[0.5px]">{pasuram.azhwar}</Text>
+                <Text className="text-gray-500 text-xs tracking-[0.03125rem]">{pasuram.azhwar}</Text>
               </View>
               <GlowHeart bookmarked={pasuram.bookmark === 1} onToggle={handleBookmarkToggle} />
             </View>
@@ -299,9 +237,16 @@ export default function PasuramScreen() {
 
           {/* Lyrics */}
           {lyricsText ? (
-            <View style={{ alignItems: 'center', marginBottom: 32, paddingHorizontal: 12 }}>
-              <Text className="text-[#E8DDD0] text-base leading-7 font-serif text-center tracking-[0.3px]">
-                {lyricsText}
+            <View className="items-center mb-8 px-3">
+              <Text
+                style={{
+                  fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
+                  lineHeight: 30,
+                }}
+                className="text-lyric-text text-[1rem] text-center tracking-[0.01875rem]"
+                selectable={true}
+              >
+                {lyricsText.replace(/\\/g, '').trim()}
               </Text>
             </View>
           ) : null}
@@ -311,17 +256,17 @@ export default function PasuramScreen() {
             <View className="flex-row flex-wrap gap-1.5 mt-3">
               {splitTags(pasuram.rasa).map((tag, idx) => (
                 <View key={`rasa-${idx}`} className="px-2 py-1 rounded-md items-center justify-center bg-rose-100">
-                  <Text className="text-[11px] font-bold tracking-[0.2px] text-rose-800">{tag}</Text>
+                  <Text className="text-[0.6875rem] font-bold tracking-[0.0125rem] text-rose-800" selectable={true}>{tag}</Text>
                 </View>
               ))}
               {splitTags(pasuram.avataram).map((tag, idx) => (
                 <View key={`avataram-${idx}`} className="px-2 py-1 rounded-md items-center justify-center bg-green-100">
-                  <Text className="text-[11px] font-bold tracking-[0.2px] text-green-800">{tag}</Text>
+                  <Text className="text-[0.6875rem] font-bold tracking-[0.0125rem] text-green-800" selectable={true}>{tag}</Text>
                 </View>
               ))}
               {splitTags(pasuram.archavathara).map((tag, idx) => (
                 <View key={`arch-${idx}`} className="px-2 py-1 rounded-md items-center justify-center bg-blue-100">
-                  <Text className="text-[11px] font-bold tracking-[0.2px] text-blue-800">{tag}</Text>
+                  <Text className="text-[0.6875rem] font-bold tracking-[0.0125rem] text-blue-800" selectable={true}>{tag}</Text>
                 </View>
               ))}
             </View>
@@ -340,8 +285,8 @@ export default function PasuramScreen() {
 
       {/* Bottom gradient */}
       <LinearGradient
-        colors={['transparent', 'rgba(24,26,31,0.8)', '#181A1F']}
-        className="absolute bottom-0 left-0 right-0 h-[90px]"
+        colors={['transparent', `${colors.main}CC`, colors.main]}
+        className="absolute bottom-0 left-0 right-0 h-[5.625rem]"
         pointerEvents="none"
       />
     </SafeAreaView>

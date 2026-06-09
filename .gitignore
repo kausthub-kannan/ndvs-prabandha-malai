@@ -5,6 +5,9 @@ node_modules/
 
 data/
 
+.vscode/
+.claude/
+
 # Expo
 .expo/
 dist/

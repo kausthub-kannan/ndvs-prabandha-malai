@@ -10,7 +10,15 @@ export default function TabLayout() {
         headerShown: false,
       }}>
       <Tabs.Screen
-        name="profile"
+        name="index"
+        options={{
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="home" size={size * 0.85} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="settings"
         options={{
           tabBarIcon: ({ color, size }) => (
             <Feather name="settings" size={size * 0.85} color={color} />
@@ -22,14 +30,6 @@ export default function TabLayout() {
         options={{
           tabBarIcon: ({ color, size }) => (
             <Feather name="search" size={size * 0.85} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="index"
-        options={{
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="home" size={size * 0.85} color={color} />
           ),
         }}
       />
